@@ -1,4 +1,8 @@
-from wtforms import Form, BooleanField, TextField, PasswordField, validators
+from flask.ext.wtf import Form
+from wtforms import TextField, TextAreaField, SubmitField, BooleanField, PasswordField, validators
+
+
+# from wtforms import Form, BooleanField, TextField, PasswordField, validators
 
 class RegistrationForm(Form):
     username = TextField('Username', [validators.Length(min=4, max=25)])
@@ -10,10 +14,12 @@ class RegistrationForm(Form):
     confirm = PasswordField('Repeat Password')
     accept_tos = BooleanField('I accept the TOS', [validators.Required()])
 
-# from flask.ext.wtf import Form
-# from wtforms import TextField, BooleanField
-# from wtforms.validators import Required
+class ContactForm(Form):
+  name = TextField("Name")
+  email = TextField("Email")
+  subject = TextField("Subject")
+  message = TextAreaField("Message")
+  submit = SubmitField("Send")
 
-# class LoginForm(Form):
-#     openid = TextField('openid', validators = [Required()])
-#     remember_me = BooleanField('remember_me', default = False)
+class LoginForm(Form):
+	username = TextField('Username')
