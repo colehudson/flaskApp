@@ -1,15 +1,22 @@
+# core
 from app import app
+from flask import render_template, request, flash, url_for, redirect
+import redis
+# forms
 from forms import ContactForm
 from forms import RegistrationForm
 from forms import LoginForm
-from flask import render_template, request, flash, url_for, redirect, incr
-import os
-import redis
-
+# models
+from models import User
 
 # Redis
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
+# Login with Flask-login
+from flask.ext.login import LoginManager
+# start up login manager and grab a userID to set session
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 
 @app.route('/')
@@ -19,30 +26,27 @@ def index():
 
 @app.route('/redis_check')
 def redis():
-	return r.get("cole")
+	return r.get("id_graham")
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 	form = RegistrationForm(request.form)
 	 # and form.validate()
-	User = []
+	# User = []
 	if request.method == 'POST':
 		# how to make a counter for user ids
 		# r.incr(form.username.data))
+		
+		user_handle = User()
+		user_handle.register()
+		# user_handle.id = "foo"
+		# user_handle.username = form.username.data
+		print user_handle.username
+		# user_handle.register()
 
-		# how to pass large amounts of data concatenated together
-		# r.set("user_object": {"username":form.username.data,"email", form.email.data,"password", form.password.data)
-		r.set(form.username.data, unicode(84))
-		r.set("username", form.username.data)
-		r.set("email", form.email.data)
-		r.set("password", form.password.data)
 		flash('Information submitted to Redis')
 		return redirect(url_for('login'))
 	elif request.method == 'GET':
-		# if r.get("username") != 0:
-			# return r.get("username")
-			# return r.get("password")
-			# return r.get("email")
 		return render_template('register.html', form=form)
 
 
@@ -57,12 +61,17 @@ def contact():
   elif request.method == 'GET':
     return render_template('contact.html', form=form)
 
+@login_manager.user_loader
+def load_user(userid):
+	return r.get(int(userid))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
         # login and validate the user...
         login_user("cole")
+        user_handle = user_loader()
         flash("Logged in successfully.")
         return redirect(request.args.get("next") or url_for("index"))
     return render_template("login.html", form=form)
