@@ -1,7 +1,8 @@
 from app import app
 from forms import ContactForm
 from forms import RegistrationForm
-from flask import render_template, request, flash
+from forms import LoginForm
+from flask import render_template, request, flash, url_for, redirect, incr
 import os
 import redis
 
@@ -26,15 +27,17 @@ def register():
 	 # and form.validate()
 	User = []
 	if request.method == 'POST':
-		# user = {"username" : form.username.data, "email" : form.email.data, "password" : form.password.data}
-		r.set(form.username.data, unicode(97))
+		# how to make a counter for user ids
+		# r.incr(form.username.data))
+
+		# how to pass large amounts of data concatenated together
+		# r.set("user_object": {"username":form.username.data,"email", form.email.data,"password", form.password.data)
+		r.set(form.username.data, unicode(84))
 		r.set("username", form.username.data)
 		r.set("email", form.email.data)
 		r.set("password", form.password.data)
-		return "information submitted to redis"
-		# return flash('Thanks for registering')
-		# return render_template('/index', form=form)
-		# return redirect(url_for('login'))
+		flash('Information submitted to Redis')
+		return redirect(url_for('login'))
 	elif request.method == 'GET':
 		# if r.get("username") != 0:
 			# return r.get("username")
@@ -48,7 +51,8 @@ def contact():
   form = ContactForm()
  
   if request.method == 'POST':
-    return 'Form posted.'
+  	flash ('Contacted!')
+  	return render_template('base.html', form=form)
  
   elif request.method == 'GET':
     return render_template('contact.html', form=form)
