@@ -1,13 +1,25 @@
 <html>
   <head>
     {% if title %}
-    <title>{{title}} - microblog</title>
+    <title>{{title}} - Flask App</title>
     {% else %}
-    <title>microblog</title>
+    <title>Flask App</title>
     {% endif %}
   </head>
   <body>
-    <div>Microblog: <a href="/index">Home</a></div>
+    <div>Flask App: <a href="/index">Home</a></div>
+    <div class="nav-collapse collapse">
+            <ul class="nav">
+                <li class="active"><a href="/">Home</a></li>
+                {% if g.user.is_authenticated()%}
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% endif %}
+                {% if not g.user.is_authenticated()%}
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                {% endif %}
+            </ul>
+</div>
     <hr>
     {% block content %}{% endblock %}
   </body>

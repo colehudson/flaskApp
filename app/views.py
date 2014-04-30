@@ -1,23 +1,17 @@
 # core
-from app import app
-from flask import render_template, request, flash, url_for, redirect
+from app import app, db, login_manager
+from flask import render_template, request, flash, url_for, redirect, abort, g
 import redis
+from flask.ext.login import login_user, logout_user, current_user, login_required
 # forms
 from forms import ContactForm
-from forms import RegistrationForm
-from forms import LoginForm
+# from forms import RegistrationForm
+# from forms import LoginForm
 # models
-from models import User
+from models import User, ROLE_USER, ROLE_ADMIN
 
 # Redis
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
-
-# Login with Flask-login
-from flask.ext.login import LoginManager
-# start up login manager and grab a userID to set session
-login_manager = LoginManager()
-login_manager.init_app(app)
-
 
 @app.route('/')
 @app.route('/index')
@@ -28,32 +22,32 @@ def index():
 def redis():
 	return r.get("id_graham")
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-	form = RegistrationForm(request.form)
-	 # and form.validate()
-	# User = []
-	if request.method == 'POST':
-		# how to make a counter for user ids
-		# r.incr(form.username.data))
-		
-		user_handle = User()
-		user_handle.register()
-		# user_handle.id = "foo"
-		# user_handle.username = form.username.data
-		print user_handle.username
-		# user_handle.register()
+@app.before_request
+def before_request():
+    g.user = current_user
 
-		flash('Information submitted to Redis')
-		return redirect(url_for('login'))
-	elif request.method == 'GET':
-		return render_template('register.html', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+@app.before_request
+def register():
+	if request.method == 'POST':
+	    user = User(request.form['username'] , request.form['password'], request.form['email'])
+	    db.session.add(user)
+	    db.session.commit()
+	    flash('User successfully registered')
+	    return redirect(url_for('login'))
+
+	elif request.method == 'GET': 
+		# form = RegistrationForm()
+		return render_template('register.html')
 
 
 @app.route('/contact', methods=['GET', 'POST'])
+# @app.before_request
+@login_required
 def contact():
   form = ContactForm()
- 
+  # print g.user
   if request.method == 'POST':
   	flash ('Contacted!')
   	return render_template('base.html', form=form)
@@ -62,19 +56,27 @@ def contact():
     return render_template('contact.html', form=form)
 
 @login_manager.user_loader
-def load_user(userid):
-	return r.get(int(userid))
+def load_user(id):
+    return User.query.get(int(id))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        # login and validate the user...
-        login_user("cole")
-        user_handle = user_loader()
-        flash("Logged in successfully.")
-        return redirect(request.args.get("next") or url_for("index"))
-    return render_template("login.html", form=form)
+    if request.method == 'GET':
+        return render_template('login.html')
+    username = request.form['username']
+    password = request.form['password']
+    registered_user = User.query.filter_by(username=username,password=password).first()
+    if registered_user is None:
+        flash('Username or Password is invalid' , 'error')
+        return redirect(url_for('login'))
+    login_user(registered_user)
+    flash('Logged in successfully')
+    return redirect(request.args.get('next') or url_for('index'))
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index')) 
 
 # @app.route('/login', methods=['POST', 'GET'])
 # def login():
