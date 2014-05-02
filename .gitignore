@@ -1,2 +1,4 @@
 flask/*
 mysql_settings.py
+config.py
+*.pyc
