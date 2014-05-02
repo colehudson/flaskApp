@@ -1,4 +1,4 @@
-from important_settings import *
+from important_settings import
 
 
 # note have to install mysql connector: pip install mysql-python
